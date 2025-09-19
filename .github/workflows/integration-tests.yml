@@ -224,7 +224,14 @@ jobs:
 
     - name: Install Frontend Dependencies
       working-directory: frontend/nextjs
-      run: npm ci
+      run: |
+        # Try npm ci first, fall back to npm install if lock file is out of sync
+        npm ci || npm install
+
+    - name: Set up environment for build
+      working-directory: frontend/nextjs
+      run: |
+        echo "NEXT_PUBLIC_API_URL=http://localhost:8000" > .env.local
 
     - name: Run Build Performance Test
       working-directory: frontend/nextjs

@@ -52,6 +52,11 @@ jobs:
           echo "No tests found or Jest not configured, skipping tests"
         fi
 
+    - name: Set up environment for build
+      working-directory: frontend/nextjs
+      run: |
+        echo "NEXT_PUBLIC_API_URL=http://localhost:8000" > .env.local
+
     - name: Build application
       working-directory: frontend/nextjs
       run: npm run build
