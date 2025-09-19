@@ -1,0 +1,33 @@
+# Development files
+.env
+.env.*
+.git
+.gitignore
+.gitattributes
+README.md
+
+# Testing
+.phpunit.result.cache
+tests/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+storage/logs/*
+!storage/logs/.gitignore
+
+# Node (if any)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Don't ignore vendor - we want to build it in the container
+# vendor/

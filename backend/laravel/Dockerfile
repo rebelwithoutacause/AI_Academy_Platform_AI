@@ -17,8 +17,21 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www/html
 
+# Copy composer files first for better layer caching
+COPY composer.json composer.lock /var/www/html/
+
+# Install PHP dependencies
+RUN composer install --no-scripts --no-autoloader --prefer-dist
+
 # Copy existing application files
 COPY . /var/www/html
+
+# Complete composer installation
+RUN composer dump-autoload --optimize
+
+# Copy environment file and generate app key
+COPY .env.example .env
+RUN php artisan key:generate
 
 # Set Apache document root
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public

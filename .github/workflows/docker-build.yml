@@ -55,6 +55,16 @@ jobs:
 
     - name: Run database migrations in container
       run: |
+        echo "Checking if Laravel container has dependencies..."
+        docker exec ai-platform-laravel ls -la /var/www/html/vendor/ || echo "Vendor directory missing"
+
+        echo "Checking composer autoload..."
+        docker exec ai-platform-laravel ls -la /var/www/html/vendor/autoload.php || {
+          echo "Autoload missing, running composer install..."
+          docker exec ai-platform-laravel composer install --no-dev --optimize-autoloader
+        }
+
+        echo "Running migrations..."
         docker exec ai-platform-laravel php artisan migrate --force
 
     - name: Run database seeders in container
