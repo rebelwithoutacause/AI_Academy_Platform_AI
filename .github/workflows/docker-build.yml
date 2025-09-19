@@ -74,7 +74,7 @@ jobs:
         # Wait a bit more for frontend to be ready
         sleep 15
 
-        # Test if frontend is serving content
+        # Test if frontend is serving content (check docker-compose port mapping)
         curl -f http://localhost:3003/ || echo "Frontend accessibility test"
 
     - name: Check container logs
