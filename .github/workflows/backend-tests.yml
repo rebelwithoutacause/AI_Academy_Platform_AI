@@ -1,0 +1,120 @@
+name: Backend Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: ai_platform_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+        extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, redis, mysql, pdo_mysql
+        coverage: xdebug
+
+    - name: Copy .env
+      working-directory: backend/laravel
+      run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+
+    - name: Install Composer dependencies
+      working-directory: backend/laravel
+      run: composer install --prefer-dist --no-progress
+
+    - name: Generate application key
+      working-directory: backend/laravel
+      run: php artisan key:generate
+
+    - name: Set up environment for testing
+      working-directory: backend/laravel
+      run: |
+        echo "DB_CONNECTION=mysql" >> .env
+        echo "DB_HOST=127.0.0.1" >> .env
+        echo "DB_PORT=3306" >> .env
+        echo "DB_DATABASE=ai_platform_test" >> .env
+        echo "DB_USERNAME=root" >> .env
+        echo "DB_PASSWORD=password" >> .env
+        echo "REDIS_HOST=127.0.0.1" >> .env
+        echo "REDIS_PORT=6379" >> .env
+
+    - name: Run database migrations
+      working-directory: backend/laravel
+      run: php artisan migrate --force
+
+    - name: Run database seeders
+      working-directory: backend/laravel
+      run: php artisan db:seed --force
+
+    - name: Run PHPUnit tests
+      working-directory: backend/laravel
+      run: ./vendor/bin/phpunit --coverage-clover=coverage.xml
+
+    - name: Run PHP Code Sniffer
+      working-directory: backend/laravel
+      run: |
+        if [ ! -f "vendor/bin/phpcs" ]; then
+          composer require --dev squizlabs/php_codesniffer
+        fi
+        vendor/bin/phpcs --standard=PSR12 app/ --ignore=app/Http/Controllers/Controller.php
+
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        file: backend/laravel/coverage.xml
+        flags: backend
+        name: backend-coverage
+
+  backend-security-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+
+    - name: Install Composer dependencies
+      working-directory: backend/laravel
+      run: composer install --prefer-dist --no-progress
+
+    - name: Run security audit
+      working-directory: backend/laravel
+      run: |
+        composer require --dev enlightn/security-checker
+        vendor/bin/security-checker security:check

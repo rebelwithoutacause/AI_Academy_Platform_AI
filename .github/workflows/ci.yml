@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  quick-validation:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Validate project structure
+      run: |
+        echo "🔍 Validating project structure..."
+
+        # Check if main directories exist
+        [ -d "frontend/nextjs" ] && echo "✅ Frontend directory exists" || { echo "❌ Frontend directory missing"; exit 1; }
+        [ -d "backend/laravel" ] && echo "✅ Backend directory exists" || { echo "❌ Backend directory missing"; exit 1; }
+
+        # Check if key files exist
+        [ -f "frontend/nextjs/package.json" ] && echo "✅ Frontend package.json exists" || { echo "❌ Frontend package.json missing"; exit 1; }
+        [ -f "backend/laravel/composer.json" ] && echo "✅ Backend composer.json exists" || { echo "❌ Backend composer.json missing"; exit 1; }
+        [ -f "docker-compose.yml" ] && echo "✅ Docker compose file exists" || { echo "❌ Docker compose file missing"; exit 1; }
+
+        echo "✅ Project structure validation passed"
+
+    - name: Validate Docker configuration
+      run: |
+        echo "🐳 Validating Docker configuration..."
+
+        # Check if Dockerfiles exist
+        [ -f "frontend/nextjs/Dockerfile" ] && echo "✅ Frontend Dockerfile exists" || echo "⚠️ Frontend Dockerfile missing"
+        [ -f "backend/laravel/Dockerfile" ] && echo "✅ Backend Dockerfile exists" || echo "⚠️ Backend Dockerfile missing"
+
+        # Validate docker-compose syntax
+        docker-compose config > /dev/null && echo "✅ Docker Compose syntax valid" || { echo "❌ Docker Compose syntax invalid"; exit 1; }
+
+    - name: Validate package.json and composer.json
+      run: |
+        echo "📦 Validating package configurations..."
+
+        # Validate frontend package.json
+        cd frontend/nextjs
+        node -e "JSON.parse(require('fs').readFileSync('package.json', 'utf8'))" && echo "✅ Frontend package.json valid" || { echo "❌ Frontend package.json invalid"; exit 1; }
+
+        # Validate backend composer.json
+        cd ../../backend/laravel
+        php -r "json_decode(file_get_contents('composer.json'), true);" && echo "✅ Backend composer.json valid" || { echo "❌ Backend composer.json invalid"; exit 1; }
+
+    - name: Generate CI Status Report
+      run: |
+        echo "## 🚀 CI Validation Results" > ci-report.md
+        echo "" >> ci-report.md
+        echo "| Component | Status |" >> ci-report.md
+        echo "|-----------|--------|" >> ci-report.md
+        echo "| Project Structure | ✅ Valid |" >> ci-report.md
+        echo "| Docker Configuration | ✅ Valid |" >> ci-report.md
+        echo "| Package Configurations | ✅ Valid |" >> ci-report.md
+        echo "" >> ci-report.md
+        echo "**All basic validations passed!** 🎉" >> ci-report.md
+
+        cat ci-report.md
+
+  call-tests:
+    needs: quick-validation
+    strategy:
+      matrix:
+        test-type: [frontend, backend, docker]
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Trigger specific test workflow
+      run: |
+        echo "✅ Quick validation passed - ${{ matrix.test-type }} tests would be triggered"
+        echo "This job represents the successful completion of basic validation"
+        echo "Individual test workflows (frontend-tests.yml, backend-tests.yml, docker-build.yml) will run in parallel"

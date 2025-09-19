@@ -1,0 +1,74 @@
+name: Frontend Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  frontend-lint-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/nextjs/package-lock.json
+
+    - name: Install dependencies
+      working-directory: frontend/nextjs
+      run: npm ci
+
+    - name: Run ESLint
+      working-directory: frontend/nextjs
+      run: npm run lint
+
+    - name: Run TypeScript check
+      working-directory: frontend/nextjs
+      run: npx tsc --noEmit
+
+    - name: Run tests
+      working-directory: frontend/nextjs
+      run: npm test -- --coverage --watchAll=false
+
+    - name: Build application
+      working-directory: frontend/nextjs
+      run: npm run build
+
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        file: frontend/nextjs/coverage/lcov.info
+        flags: frontend
+        name: frontend-coverage
+
+  frontend-security-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      working-directory: frontend/nextjs
+      run: npm ci
+
+    - name: Run security audit
+      working-directory: frontend/nextjs
+      run: npm audit --audit-level=moderate
+
+    - name: Run dependency check
+      working-directory: frontend/nextjs
+      run: npx audit-ci --moderate

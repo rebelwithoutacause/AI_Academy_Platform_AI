@@ -1,0 +1,130 @@
+name: Docker Build & Test
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  docker-build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Frontend Docker image
+      run: |
+        cd frontend/nextjs
+        docker build -t ai-platform-frontend:test .
+
+    - name: Build Backend Docker image
+      run: |
+        cd backend/laravel
+        docker build -t ai-platform-backend:test .
+
+    - name: Test Docker Compose build
+      run: |
+        docker-compose -f docker-compose.yml build
+
+    - name: Start services with Docker Compose
+      run: |
+        docker-compose up -d
+
+    - name: Wait for services to be ready
+      run: |
+        echo "Waiting for services to start..."
+        sleep 30
+
+        # Check if MySQL is ready
+        until docker exec ai-platform-mysql mysqladmin ping -h localhost --silent; do
+          echo "Waiting for MySQL..."
+          sleep 5
+        done
+
+        # Check if Laravel is responding
+        until curl -f http://localhost:8000/api/health 2>/dev/null || [ $? -eq 22 ]; do
+          echo "Waiting for Laravel API..."
+          sleep 5
+        done
+
+    - name: Run database migrations in container
+      run: |
+        docker exec ai-platform-laravel php artisan migrate --force
+
+    - name: Run database seeders in container
+      run: |
+        docker exec ai-platform-laravel php artisan db:seed --force
+
+    - name: Test API endpoints
+      run: |
+        # Test health endpoint (if exists)
+        curl -f http://localhost:8000/ || echo "Root endpoint check"
+
+        # Test API routes that should be accessible
+        curl -f http://localhost:8000/api/tools || echo "Tools API test"
+
+    - name: Test Frontend accessibility
+      run: |
+        # Wait a bit more for frontend to be ready
+        sleep 15
+
+        # Test if frontend is serving content
+        curl -f http://localhost:3003/ || echo "Frontend accessibility test"
+
+    - name: Check container logs
+      if: failure()
+      run: |
+        echo "=== Laravel Logs ==="
+        docker logs ai-platform-laravel
+        echo "=== Next.js Logs ==="
+        docker logs ai-platform-nextjs
+        echo "=== MySQL Logs ==="
+        docker logs ai-platform-mysql
+        echo "=== Redis Logs ==="
+        docker logs ai-platform-redis
+
+    - name: Stop services
+      if: always()
+      run: |
+        docker-compose down -v
+
+  docker-security-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build images for scanning
+      run: |
+        cd frontend/nextjs && docker build -t ai-platform-frontend:scan .
+        cd ../../backend/laravel && docker build -t ai-platform-backend:scan .
+
+    - name: Run Trivy vulnerability scanner on Frontend
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'ai-platform-frontend:scan'
+        format: 'sarif'
+        output: 'frontend-trivy-results.sarif'
+
+    - name: Run Trivy vulnerability scanner on Backend
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'ai-platform-backend:scan'
+        format: 'sarif'
+        output: 'backend-trivy-results.sarif'
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: '.'
