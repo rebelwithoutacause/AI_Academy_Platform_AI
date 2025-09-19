@@ -62,9 +62,12 @@ describe('Authentication Security Tests', () => {
   })
 
   test('validates HTTPS in production environment', () => {
-    // Mock production environment
+    // Mock production environment using Object.defineProperty
     const originalEnv = process.env.NODE_ENV
-    process.env.NODE_ENV = 'production'
+    Object.defineProperty(process.env, 'NODE_ENV', {
+      value: 'production',
+      configurable: true
+    })
 
     const mockOnLogin = jest.fn()
     render(<LoginForm onLogin={mockOnLogin} />)
@@ -74,7 +77,10 @@ describe('Authentication Security Tests', () => {
     expect(process.env.NODE_ENV).toBe('production')
 
     // Restore environment
-    process.env.NODE_ENV = originalEnv
+    Object.defineProperty(process.env, 'NODE_ENV', {
+      value: originalEnv,
+      configurable: true
+    })
   })
 
   test('prevents CSRF attacks by using proper headers', async () => {

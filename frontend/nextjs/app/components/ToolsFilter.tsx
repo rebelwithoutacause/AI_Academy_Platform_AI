@@ -67,8 +67,8 @@ export default function ToolsFilter({ filters, onFiltersChange }: ToolsFilterPro
           >
             <option value="">All Categories</option>
             {categories.map(category => (
-              <option key={category.id} value={category.name}>
-                {category.name}
+              <option key={category.id} value={typeof category === 'string' ? category : category.name}>
+                {typeof category === 'string' ? category : category.name}
               </option>
             ))}
           </select>
@@ -85,8 +85,8 @@ export default function ToolsFilter({ filters, onFiltersChange }: ToolsFilterPro
           >
             <option value="">All Roles</option>
             {roles.map(role => (
-              <option key={role.id} value={role.name}>
-                {role.name}
+              <option key={role.id} value={typeof role === 'string' ? role : role.name}>
+                {typeof role === 'string' ? role : role.name}
               </option>
             ))}
           </select>

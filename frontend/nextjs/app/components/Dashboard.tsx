@@ -24,6 +24,19 @@ interface DashboardData {
   role_access: string
   current_time: string
   user: User
+  totalTools: number
+  totalUsers: number
+  recentActivities: Array<{
+    id: number
+    activity: string
+    time: string
+  }>
+  popularTools: Array<{
+    id: number
+    name: string
+    category: string
+    uses: number
+  }>
 }
 
 export default function Dashboard({ user }: DashboardProps) {
