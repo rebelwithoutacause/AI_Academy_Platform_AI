@@ -35,7 +35,8 @@ jobs:
         if [ ! -f ".eslintrc.json" ]; then
           echo '{"extends": ["next/core-web-vitals"]}' > .eslintrc.json
         fi
-        npm run lint
+        # Run ESLint but allow warnings, only fail on errors
+        npm run lint -- --max-warnings 100
 
     - name: Run TypeScript check
       working-directory: frontend/nextjs

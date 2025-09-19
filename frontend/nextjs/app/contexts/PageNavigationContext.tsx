@@ -41,7 +41,7 @@ export function PageNavigationProvider({ children }: { children: React.ReactNode
 
   // Update current page index based on pathname
   useEffect(() => {
-    let pageIndex = pages.findIndex(page => page.path === pathname)
+    const pageIndex = pages.findIndex(page => page.path === pathname)
 
     // For profile subsections, don't update the main navigation index
     // They are handled separately via dropdown
