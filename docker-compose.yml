@@ -1,0 +1,91 @@
+services:
+  # Laravel Backend
+  laravel:
+    build:
+      context: ./backend/laravel
+      dockerfile: Dockerfile
+    container_name: ai-platform-laravel
+    ports:
+      - "8000:80"
+    volumes:
+      - ./backend/laravel:/var/www/html
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=ai_platform
+      - DB_USERNAME=root
+      - DB_PASSWORD=password
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=null
+      - REDIS_PORT=6379
+      - APP_KEY=base64:54w+Ogc0J2trcNKsgum1e9afW81H9vYAduQif5iQhbs=
+      - APP_ENV=local
+      - APP_DEBUG=true
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - ai-platform-network
+    restart: unless-stopped
+
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: ai-platform-mysql
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: ai_platform
+      MYSQL_PASSWORD: password
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - ai-platform-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ppassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Next.js Frontend
+  nextjs:
+    build:
+      context: ./frontend/nextjs
+      dockerfile: Dockerfile
+    container_name: ai-platform-nextjs
+    ports:
+      - "8080:3000"
+    volumes:
+      - ./frontend/nextjs:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NODE_ENV=development
+    networks:
+      - ai-platform-network
+    restart: unless-stopped
+
+  # Redis (Optional)
+  redis:
+    image: redis:7-alpine
+    container_name: ai-platform-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - ai-platform-network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  ai-platform-network:
+    driver: bridge

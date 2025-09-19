@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node:*)",
+      "Bash(npm i:*)",
+      "Bash(netstat:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(docker logs:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx next dev:*)",
+      "Bash(php artisan:*)",
+      "Bash(docker-compose:*)",
+      "Bash(curl:*)",
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(ipconfig)",
+      "Bash(mkdir:*)",
+      "Bash(taskkill:*)",
+      "Bash(\"taskkill\" \"/F\" \"/PID\" \"16692\")",
+      "Bash(set SKIP_TYPE_CHECK=true)",
+      "Bash(npx next lint:*)",
+      "Bash(tasklist:*)",
+      "Bash(set SKIP_DB=true)",
+      "Bash(timeout:*)",
+      "Bash(powershell:*)",
+      "Bash(npm start)",
+      "Bash(npm run build:*)",
+      "Bash(npm:*)",
+      "Bash(docker exec:*)",
+      "Bash(git remote add:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

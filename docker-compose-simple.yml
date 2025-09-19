@@ -1,0 +1,28 @@
+services:
+  # Laravel Backend (using official PHP image)
+  laravel:
+    image: php:8.2-apache
+    container_name: ai-platform-laravel-simple
+    ports:
+      - "8000:80"
+    volumes:
+      - ./simple-app:/var/www/html
+    networks:
+      - ai-platform-network
+
+  # Simple Next.js Frontend (using Node image)
+  nextjs:
+    image: node:20-alpine
+    container_name: ai-platform-nextjs-simple
+    ports:
+      - "8080:3000"
+    volumes:
+      - ./simple-frontend:/app
+    working_dir: /app
+    networks:
+      - ai-platform-network
+    command: node server.js
+
+networks:
+  ai-platform-network:
+    driver: bridge
