@@ -35,7 +35,8 @@ class ToolFactory extends Factory
             'rating' => $this->faker->optional()->randomFloat(1, 0, 5),
             'images' => $this->faker->optional()->randomElements([
                 'tools/' . $this->faker->uuid() . '.jpg',
-                'tools/' . $this->faker->uuid() . '.png'
+                'tools/' . $this->faker->uuid() . '.png',
+                'tools/' . $this->faker->uuid() . '.webp'
             ], $this->faker->numberBetween(0, 3)),
             'created_by' => User::factory(),
         ];
