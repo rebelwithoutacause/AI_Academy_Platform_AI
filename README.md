@@ -45,7 +45,7 @@ docker-compose logs -f
 ```
 
 ### 3. Access the Application
-- **Frontend**: http://localhost:8080
+- **Frontend**: http://localhost:3003
 - **Backend API**: http://localhost:8000
 - **Database**: localhost:3307
 
@@ -312,7 +312,7 @@ DELETE /api/comments/{id}           # Delete own comment
 | Service | Container | Port | Description |
 |---------|-----------|------|-------------|
 | **Laravel** | ai-platform-laravel | 8000 | Backend API |
-| **Next.js** | ai-platform-nextjs | 8080 | Frontend App |
+| **Next.js** | ai-platform-nextjs | 3003 | Frontend App |
 | **MySQL** | ai-platform-mysql | 3307 | Database |
 | **Redis** | ai-platform-redis | 6379 | Cache |
 
@@ -454,7 +454,7 @@ If ports are in use, modify `docker-compose.yml`:
 
 ```yaml
 ports:
-  - "8081:80"  # Change 8080 to 8081
+  - "3004:80"  # Change 3003 to 3004
   - "8001:80"  # Change 8000 to 8001
   - "3308:3306" # Change 3307 to 3308
 ```
