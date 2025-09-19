@@ -38,7 +38,7 @@ jobs:
         [ -f "backend/laravel/Dockerfile" ] && echo "✅ Backend Dockerfile exists" || echo "⚠️ Backend Dockerfile missing"
 
         # Validate docker-compose syntax
-        docker-compose config > /dev/null && echo "✅ Docker Compose syntax valid" || { echo "❌ Docker Compose syntax invalid"; exit 1; }
+        docker compose config > /dev/null && echo "✅ Docker Compose syntax valid" || { echo "❌ Docker Compose syntax invalid"; exit 1; }
 
     - name: Validate package.json and composer.json
       run: |
